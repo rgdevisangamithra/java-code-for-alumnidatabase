@@ -1,0 +1,137 @@
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+class Alumni {
+    private String name;
+    private int graduationYear;
+    private String course;
+    private String email;
+    private String phone;
+
+    // Constructor
+    public Alumni(String name, int graduationYear, String course, String email, String phone) {
+        this.name = name;
+        this.graduationYear = graduationYear;
+        this.course = course;
+        this.email = email;
+        this.phone = phone;
+    }
+
+    // Getters
+    public String getName() {
+        return name;
+    }
+
+    public int getGraduationYear() {
+        return graduationYear;
+    }
+
+    public String getCourse() {
+        return course;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    // toString method to display alumni details
+    @Override
+    public String toString() {
+        return "Name: " + name + "\n" +
+               "Graduation Year: " + graduationYear + "\n" +
+               "Course: " + course + "\n" +
+               "Email: " + email + "\n" +
+               "Phone: " + phone + "\n";
+    }
+}
+
+class AlumniForm {
+    // Database credentials
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/AlumniDB";
+    private static final String DB_USER = "devi";
+    private static final String DB_PASSWORD = "1234";
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        ArrayList<Alumni> alumniList = new ArrayList<>();
+
+        System.out.println("Welcome to the Alumni Database!");
+        boolean continueInput = true;
+
+        while (continueInput) {
+            System.out.println("\nEnter Alumni Details:");
+
+            // Collect data
+            System.out.print("Name: ");
+            String name = scanner.nextLine();
+
+            System.out.print("Graduation Year: ");
+            int graduationYear = Integer.parseInt(scanner.nextLine());
+
+            System.out.print("Course: ");
+            String course = scanner.nextLine();
+
+            System.out.print("Email: ");
+            String email = scanner.nextLine();
+
+            System.out.print("Phone: ");
+            String phone = scanner.nextLine();
+
+            // Create Alumni object and add it to the list
+            Alumni alumni = new Alumni(name, graduationYear, course, email, phone);
+            alumniList.add(alumni);
+
+            // Save data to the database
+            saveToDatabase(alumni);
+
+            // Ask if user wants to continue
+            System.out.print("Do you want to add another alumni? (yes/no): ");
+            String response = scanner.nextLine().toLowerCase();
+            continueInput = response.equals("yes");
+        }
+
+        // Display all alumni details
+        System.out.println("\nAlumni Database:");
+        for (Alumni alumni : alumniList) {
+            System.out.println(alumni);
+        }
+
+        scanner.close();
+    }
+
+    // Method to save Alumni details to the database
+    private static void saveToDatabase(Alumni alumni) {
+        String insertQuery = "INSERT INTO Alumni (name, graduation_year, course, email, phone) VALUES (?, ?, ?, ?, ?)";
+
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)) {
+
+            // Set parameters for the query
+            preparedStatement.setString(1, alumni.getName());
+            preparedStatement.setInt(2, alumni.getGraduationYear());
+            preparedStatement.setString(3, alumni.getCourse());
+            preparedStatement.setString(4, alumni.getEmail());
+            preparedStatement.setString(5, alumni.getPhone());
+
+            // Execute the query
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("Alumni details saved successfully!");
+            } else {
+                System.out.println("Failed to save alumni details.");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error saving to the database: " + e.getMessage());
+        }
+    }
+}
